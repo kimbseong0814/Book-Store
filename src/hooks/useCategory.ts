@@ -1,0 +1,57 @@
+// 데이터를 분리하거나 강화할때 유용하게 사용 = hooks
+import { useEffect, useState } from "react";
+import { Category } from "../models/category.model";
+import { fetchCategory } from "../api/category.api";
+import { useLocation } from "react-router-dom";
+
+export const useCategory = () => {
+  const location = useLocation();
+  const [category, setCategory] = useState<Category[]>([]);
+
+  console.log("location", location.search);
+
+  const setActive = () => {
+    const params = new URLSearchParams(location.search);
+    if (params.has("category_id")) {
+      setCategory((prev) => {
+        return prev.map((item) => {
+          return {
+            ...item,
+            isActive: item.category_id === Number(params.get("category_id")),
+          };
+        });
+      });
+    } else {
+      setCategory((prev) => {
+        return prev.map((item) => {
+          return {
+            ...item,
+            isActive: false,
+          };
+        });
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchCategory().then((category) => {
+      if(!category) return;
+
+      const categoryWithAll = [
+        { 
+          category_id: null,
+          category_name: "전체",
+        },
+        ...category,
+      ];
+
+      setCategory(categoryWithAll);
+    });
+  }, []);
+
+  useEffect(() => {
+    setActive();
+  }, [location.search]);
+
+  return { category };
+};
